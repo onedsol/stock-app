@@ -1,0 +1,12 @@
+{
+  "name": "stock-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently --names \"server,client\" --prefix-colors \"cyan,magenta\" \"pnpm --filter ./server... run dev\" \"pnpm --filter ./client... run dev\"",
+    "install:all": "pnpm install --filter ./server... && pnpm install --filter ./client..."
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
