@@ -5,11 +5,12 @@ import OverviewTab   from './OverviewTab.vue'
 import ValuationTab  from './ValuationTab.vue'
 import SecTab        from './SecTab.vue'
 import HistoryTab    from './HistoryTab.vue'
+import PriceChartTab from './PriceChartTab.vue'
 
 const props = defineProps<{ entry: StockEntry }>()
 const emit  = defineEmits<{ remove: [ticker: string]; retry: [ticker: string] }>()
 
-const activeTab = ref<'overview' | 'valuation' | 'sec' | 'history'>('overview')
+const activeTab = ref<'overview' | 'chart' | 'valuation' | 'sec' | 'history'>('overview')
 
 function fmt(n: number | null, d = 2) {
   if (n == null) return 'N/A'
@@ -58,7 +59,7 @@ function fmt(n: number | null, d = 2) {
     <!-- Ready state -->
     <template v-else-if="entry.quote">
       <div class="tabs">
-        <button v-for="t in ['overview','valuation','sec','history']" :key="t"
+        <button v-for="t in ['overview','chart','valuation','sec','history']" :key="t"
           class="tab" :class="{ on: activeTab === t }"
           @click="activeTab = t as any">
           {{ t.charAt(0).toUpperCase() + t.slice(1) }}
@@ -67,6 +68,7 @@ function fmt(n: number | null, d = 2) {
 
       <div class="pane">
         <OverviewTab  v-if="activeTab === 'overview'"  :quote="entry.quote" />
+        <PriceChartTab v-if="activeTab === 'chart'"   :ticker="entry.ticker" :price="entry.quote.price" />
         <ValuationTab v-if="activeTab === 'valuation'" :valuation="entry.valuation!" :price="entry.quote.price!" />
         <SecTab       v-if="activeTab === 'sec'"       :sec="entry.sec" :loading="entry.status === 'loading-sec'" />
         <HistoryTab   v-if="activeTab === 'history'"   :sec="entry.sec" :loading="entry.status === 'loading-sec'" />

@@ -28,6 +28,7 @@ stock-app/
 │       │   ├── OverviewTab.vue
 │       │   ├── ValuationTab.vue
 │       │   ├── SecTab.vue
+│       │   ├── PriceChartTab.vue
 │       │   └── HistoryTab.vue
 │       ├── composables/
 │       │   ├── useStocks.ts     — watchlist state + API calls
@@ -38,7 +39,8 @@ stock-app/
         ├── index.ts
         ├── routes/
         │   ├── quote.ts   GET /api/quote/:ticker
-        │   └── sec.ts     GET /api/sec/:ticker
+        │   ├── sec.ts     GET /api/sec/:ticker
+        │   └── chart.ts   GET /api/chart/:ticker?range=
         └── services/
             ├── yahoo.ts   — Yahoo Finance (direct, no proxy)
             └── edgar.ts   — SEC EDGAR (submissions + XBRL facts + EFTS)
@@ -50,4 +52,5 @@ stock-app/
 |---|---|---|
 | `GET /api/quote/:ticker` | Price, margins, FCF, EPS, BVPS… | 5 min |
 | `GET /api/sec/:ticker` | Filings, 7-yr history, Form 4 insiders | 1 h |
+| `GET /api/chart/:ticker?range=1m\|6m\|1y\|5y` | Closing prices (daily; weekly for 5y) | 5 min / 1 h (5y) |
 | `GET /api/health` | Healthcheck | — |

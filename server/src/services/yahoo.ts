@@ -1,7 +1,7 @@
 // yahoo-finance2 v3 — must instantiate the class
 import YahooFinance from 'yahoo-finance2';
 import NodeCache from 'node-cache';
-import type { QuoteData } from '../types.js';
+import type { QuoteData, PricePoint, ChartRange } from '../types.js';
 
 const cache = new NodeCache({ stdTTL: 300 }); // 5 min
 const yf = new (YahooFinance as any)();
@@ -75,4 +75,34 @@ export async function fetchQuote(ticker: string): Promise<QuoteData> {
 
   cache.set(key, result);
   return result;
+}
+
+const CHART_RANGES: Record<ChartRange, { months: number; interval: '1d' | '1wk'; ttl: number }> = {
+  '1m': { months: 1,  interval: '1d',  ttl: 300 },
+  '6m': { months: 6,  interval: '1d',  ttl: 300 },
+  '1y': { months: 12, interval: '1d',  ttl: 300 },
+  '5y': { months: 60, interval: '1wk', ttl: 3600 },
+};
+
+export function isChartRange(r: unknown): r is ChartRange {
+  return typeof r === 'string' && r in CHART_RANGES;
+}
+
+export async function fetchChart(ticker: string, range: ChartRange): Promise<PricePoint[]> {
+  const key = `chart:${ticker}:${range}`;
+  const cached = cache.get<PricePoint[]>(key);
+  if (cached) return cached;
+
+  const { months, interval, ttl } = CHART_RANGES[range];
+  const period1 = new Date();
+  period1.setMonth(period1.getMonth() - months);
+
+  const r: any = await yf.chart(ticker, { period1, interval });
+
+  const points: PricePoint[] = (r?.quotes ?? [])
+    .filter((q: any) => q.close != null && q.date)
+    .map((q: any) => ({ date: new Date(q.date).toISOString().slice(0, 10), close: q.close }));
+
+  cache.set(key, points, ttl);
+  return points;
 }

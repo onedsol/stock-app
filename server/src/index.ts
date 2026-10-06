@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import quoteRouter from './routes/quote.js';
 import secRouter from './routes/sec.js';
+import chartRouter from './routes/chart.js';
 
 const app = express();
 const PORT = process.env.PORT ?? 3001;
@@ -11,6 +12,7 @@ app.use(express.json());
 
 app.use('/api/quote', quoteRouter);
 app.use('/api/sec',   secRouter);
+app.use('/api/chart', chartRouter);
 
 app.get('/api/health', (_req, res) => res.json({ ok: true }));
 

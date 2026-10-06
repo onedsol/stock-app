@@ -80,3 +80,10 @@ export interface StockEntry {
   sec?: SecData | null
   valuation?: Valuation | null
 }
+
+export interface PricePoint {
+  date: string  // YYYY-MM-DD
+  close: number
+}
+
+export type ChartRange = '1m' | '6m' | '1y' | '5y'
