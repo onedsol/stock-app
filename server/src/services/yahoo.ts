@@ -4,7 +4,7 @@ import NodeCache from 'node-cache';
 import type { QuoteData, PricePoint, ChartRange } from '../types.js';
 
 const cache = new NodeCache({ stdTTL: 300 }); // 5 min
-const yf = new (YahooFinance as any)();
+export const yf = new (YahooFinance as any)({ suppressNotices: ['yahooSurvey'] });
 
 export async function fetchQuote(ticker: string): Promise<QuoteData> {
   const key = `quote:${ticker}`;
@@ -28,6 +28,7 @@ export async function fetchQuote(ticker: string): Promise<QuoteData> {
   const price = r?.price                                                     ?? {};
   const fin   = r?.financialData                                             ?? {};
   const ks    = r?.defaultKeyStatistics                                      ?? {};
+  const sd    = r?.summaryDetail                                             ?? {};
   const bs    = r?.balanceSheetHistory?.balanceSheetStatements?.[0]          ?? {};
   const is0   = r?.incomeStatementHistory?.incomeStatementHistory?.[0]       ?? {};
   const prof  = r?.assetProfile                                              ?? {};
@@ -50,7 +51,7 @@ export async function fetchQuote(ticker: string): Promise<QuoteData> {
     marketCap:   price.marketCap   ?? null,
     sharesOut,
     beta:        ks.beta           ?? null,
-    pe:          ks.trailingPE     ?? null,
+    pe:          ks.trailingPE     ?? sd.trailingPE ?? null,
     forwardPE:   ks.forwardPE      ?? null,
     pb:          ks.priceToBook    ?? null,
     week52High:  ks.fiftyTwoWeekHigh  ?? price.fiftyTwoWeekHigh ?? null,

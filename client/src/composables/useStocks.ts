@@ -36,10 +36,17 @@ async function fetchTicker(ticker: string) {
 
     entries.value.set(ticker, { ticker, status: 'loading-sec', quote, valuation })
 
-    const sRes = await fetch(`/api/sec/${ticker}`)
-    const sec  = sRes.ok ? await sRes.json().catch(() => null) : null
+    const getJson = (url: string) =>
+      fetch(url).then(r => r.ok ? r.json() : null).catch(() => null)
+    const [sec, multiples] = await Promise.all([
+      getJson(`/api/sec/${ticker}`),
+      getJson(`/api/multiples/${ticker}`),
+    ])
 
-    entries.value.set(ticker, { ticker, status: 'ready', quote, valuation, sec })
+    entries.value.set(ticker, {
+      ticker, status: 'ready', quote, sec, multiples,
+      valuation: calcValuation(quote, multiples),
+    })
   } catch (e: any) {
     entries.value.set(ticker, { ticker, status: 'error', error: e.message })
   }

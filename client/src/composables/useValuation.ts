@@ -1,4 +1,4 @@
-import type { QuoteData, Valuation, ValuationMethod } from '../types/index.js'
+import type { QuoteData, MultiplesData, Valuation, ValuationMethod } from '../types/index.js'
 
 const SECTOR_PE: Record<string, number> = {
   Technology: 20, 'Communication Services': 18, 'Consumer Discretionary': 22,
@@ -63,18 +63,27 @@ function calcEVEB(y: QuoteData): (ValuationMethod & { mult: number }) | null {
   return { iv, mos: mos(iv, y.price), mult }
 }
 
-export function calcValuation(y: QuoteData): Valuation {
+// NTM EPS (consensus) × 5-yr conservative NTM P/E (see server/src/services/multiples.ts)
+function calcHistPE(y: QuoteData, m: MultiplesData | null | undefined): (ValuationMethod & { pe: number; eps: number }) | null {
+  const n = m?.ntm
+  if (!n?.ivConservative || n.ivConservative <= 0 || !n.cons5y || !n.eps || !y.price) return null
+  return { iv: n.ivConservative, mos: mos(n.ivConservative, y.price), pe: n.cons5y, eps: n.eps }
+}
+
+export function calcValuation(y: QuoteData, m?: MultiplesData | null): Valuation {
   const dcf    = calcDCF(y)
   const graham = calcGraham(y)
   const pe     = calcPE(y)
   const evEb   = calcEVEB(y)
+  const histPE = calcHistPE(y, m)
 
-  const methods = [dcf, graham, pe, evEb].filter((m): m is ValuationMethod => !!m && m.iv > 0 && m.iv < 1e7)
+  const methods = [dcf, graham, pe, evEb, histPE].filter((m): m is ValuationMethod => !!m && m.iv > 0 && m.iv < 1e7)
   const avg     = methods.length ? methods.reduce((s, m) => s + m.iv, 0) / methods.length : null
   const avgMOS  = avg && y.price ? mos(avg, y.price) : null
 
   return {
-    dcf, graham, pe, evEb, avg, avgMOS,
+    dcf, graham, pe, evEb, histPE, avg, avgMOS,
+    count: methods.length,
     wacc: dcf?.wacc ?? null,
     g1:   dcf?.g1   ?? null,
     g2:   dcf?.g2   ?? null,

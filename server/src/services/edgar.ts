@@ -23,6 +23,30 @@ async function loadCIKMap() {
   });
 }
 
+// /api/sec and /api/multiples request the same (large) facts payload concurrently
+const factsInFlight = new Map<string, Promise<any>>();
+
+function loadFacts(cik: string): Promise<any> {
+  const cached = cacheLong.get<any>(`facts:${cik}`);
+  if (cached) return Promise.resolve(cached);
+  let p = factsInFlight.get(cik);
+  if (!p) {
+    p = axios.get(`https://data.sec.gov/api/xbrl/companyfacts/CIK${cik}.json`, { headers: SEC_HEADERS, timeout: 30000 })
+      .then(r => { cacheLong.set(`facts:${cik}`, r.data); return r.data; })
+      .finally(() => factsInFlight.delete(cik));
+    factsInFlight.set(cik, p);
+  }
+  return p;
+}
+
+/** XBRL company facts for a ticker (cached 24 h); null if the ticker has no CIK. */
+export async function getCompanyFacts(ticker: string): Promise<{ cik: string; facts: any } | null> {
+  await loadCIKMap();
+  const cik = cikMap[ticker.toUpperCase()];
+  if (!cik) return null;
+  return { cik, facts: await loadFacts(cik) };
+}
+
 function extractAnnual(gaap: any, ...concepts: string[]): HistoryPoint[] {
   for (const concept of concepts) {
     const arr: any[] = gaap?.[concept]?.units?.USD;
@@ -57,8 +81,7 @@ export async function fetchSecData(ticker: string): Promise<SecData | null> {
     const [subs, facts] = await Promise.all([
       axios.get(`https://data.sec.gov/submissions/CIK${cik}.json`, { headers: SEC_HEADERS, timeout: 10000 })
         .then(r => r.data),
-      (cacheLong.get<any>(`facts:${cik}`) ?? axios.get(`https://data.sec.gov/api/xbrl/companyfacts/CIK${cik}.json`, { headers: SEC_HEADERS, timeout: 30000 })
-        .then(r => { cacheLong.set(`facts:${cik}`, r.data); return r.data; })),
+      loadFacts(cik),
     ]);
 
     const gaap  = facts?.facts?.['us-gaap'] ?? {};

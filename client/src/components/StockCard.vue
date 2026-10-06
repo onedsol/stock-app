@@ -6,11 +6,12 @@ import ValuationTab  from './ValuationTab.vue'
 import SecTab        from './SecTab.vue'
 import HistoryTab    from './HistoryTab.vue'
 import PriceChartTab from './PriceChartTab.vue'
+import MultiplesTab  from './MultiplesTab.vue'
 
 const props = defineProps<{ entry: StockEntry }>()
 const emit  = defineEmits<{ remove: [ticker: string]; retry: [ticker: string] }>()
 
-const activeTab = ref<'overview' | 'chart' | 'valuation' | 'sec' | 'history'>('overview')
+const activeTab = ref<'overview' | 'chart' | 'valuation' | 'multiples' | 'sec' | 'history'>('overview')
 
 function fmt(n: number | null, d = 2) {
   if (n == null) return 'N/A'
@@ -59,7 +60,7 @@ function fmt(n: number | null, d = 2) {
     <!-- Ready state -->
     <template v-else-if="entry.quote">
       <div class="tabs">
-        <button v-for="t in ['overview','chart','valuation','sec','history']" :key="t"
+        <button v-for="t in ['overview','chart','valuation','multiples','sec','history']" :key="t"
           class="tab" :class="{ on: activeTab === t }"
           @click="activeTab = t as any">
           {{ t.charAt(0).toUpperCase() + t.slice(1) }}
@@ -69,7 +70,8 @@ function fmt(n: number | null, d = 2) {
       <div class="pane">
         <OverviewTab  v-if="activeTab === 'overview'"  :quote="entry.quote" />
         <PriceChartTab v-if="activeTab === 'chart'"   :ticker="entry.ticker" :price="entry.quote.price" />
-        <ValuationTab v-if="activeTab === 'valuation'" :valuation="entry.valuation!" :price="entry.quote.price!" />
+        <ValuationTab v-if="activeTab === 'valuation'" :valuation="entry.valuation!" :price="entry.quote.price!" :loading="entry.status === 'loading-sec'" />
+        <MultiplesTab v-if="activeTab === 'multiples'" :multiples="entry.multiples" :loading="entry.status === 'loading-sec'" :price="entry.quote.price" />
         <SecTab       v-if="activeTab === 'sec'"       :sec="entry.sec" :loading="entry.status === 'loading-sec'" />
         <HistoryTab   v-if="activeTab === 'history'"   :sec="entry.sec" :loading="entry.status === 'loading-sec'" />
       </div>
@@ -99,7 +101,7 @@ function fmt(n: number | null, d = 2) {
 .err-msg   { padding: 12px 16px; color: var(--red); font-size: 12px; }
 .err-detail{ color: var(--muted); font-size: 11px; margin-top: 4px; }
 
-.tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 14px; gap: 2px; }
+.tabs { display: flex; border-bottom: 1px solid var(--border); padding: 0 14px; gap: 2px; overflow-x: auto; scrollbar-width: none; }
 .tab  { background: none; border: none; border-bottom: 2px solid transparent; padding: 8px 10px; font-size: 12px; font-weight: 500; color: var(--dim); cursor: pointer; margin-bottom: -1px; transition: color .15s, border-color .15s; white-space: nowrap; }
 .tab.on { color: var(--blue); border-bottom-color: var(--blue); }
 .tab:hover:not(.on) { color: var(--text); }
