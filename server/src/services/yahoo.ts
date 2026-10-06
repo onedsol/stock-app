@@ -18,9 +18,6 @@ export async function fetchQuote(ticker: string): Promise<QuoteData> {
       'summaryDetail',
       'defaultKeyStatistics',
       'financialData',
-      'cashflowStatementHistory',
-      'balanceSheetHistory',
-      'incomeStatementHistory',
       'assetProfile',
     ],
   });
@@ -29,16 +26,15 @@ export async function fetchQuote(ticker: string): Promise<QuoteData> {
   const fin   = r?.financialData                                             ?? {};
   const ks    = r?.defaultKeyStatistics                                      ?? {};
   const sd    = r?.summaryDetail                                             ?? {};
-  const bs    = r?.balanceSheetHistory?.balanceSheetStatements?.[0]          ?? {};
-  const is0   = r?.incomeStatementHistory?.incomeStatementHistory?.[0]       ?? {};
   const prof  = r?.assetProfile                                              ?? {};
 
   const sharesOut = ks.sharesOutstanding ?? price.sharesOutstanding ?? null;
-  const totalDebt = fin.totalDebt  ?? bs.longTermDebt ?? null;
-  const totalCash = fin.totalCash  ?? bs.cash         ?? null;
-  const bookVal   = bs.totalStockholdersEquity ?? null;
-  const bvps      = bookVal && sharesOut ? bookVal / sharesOut : null;
-  const eps       = ks.trailingEps ?? (is0.netIncomeLoss && sharesOut ? is0.netIncomeLoss / sharesOut : null);
+  // balanceSheetHistory / incomeStatementHistory have been empty since Nov 2024; use per-share stats instead
+  const totalDebt = fin.totalDebt  ?? null;
+  const totalCash = fin.totalCash  ?? null;
+  const bvps      = ks.bookValue   ?? null;
+  const bookVal   = bvps != null && sharesOut ? bvps * sharesOut : null;
+  const eps       = ks.trailingEps ?? null;
   const fcf       = fin.freeCashflow ?? null;
   const revenue   = fin.totalRevenue ?? null;
 
