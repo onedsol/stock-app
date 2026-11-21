@@ -7,6 +7,8 @@ services:
     restart: unless-stopped
     ports:
       - "3001:3001"
+    environment:
+      SEC_USER_AGENT: ${SEC_USER_AGENT:?set SEC_USER_AGENT in .env, e.g. "StockDashboard/1.0 you@example.com"}
     labels:
       # --- Homepage (dashboard tile, discovered via socket-proxy) ---
       homepage.group: Finance

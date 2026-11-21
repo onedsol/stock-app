@@ -3,7 +3,7 @@
 # stock-app with Docker, plus a systemd timer that pulls new images.
 #
 #   ./create-lxc.sh                      # defaults below
-#   CTID=210 IMAGE=ghcr.io/me/stock-app AUTO_UPDATE=0 ./create-lxc.sh
+#   CTID=210 IMAGE=ghcr.io/me/stock-app SEC_USER_AGENT="StockDashboard/1.0 you@example.com" ./create-lxc.sh
 #
 # Expects compose.yml and update.sh next to it (copy the deploy/ folder +
 # compose.yml to the node, e.g. scp -r deploy compose.yml root@pve1:/root/stock-app/).
@@ -22,6 +22,7 @@ DISK=${DISK:-8}
 IMAGE=${IMAGE:-ghcr.io/OWNER/stock-app}
 TAG=${TAG:-latest}
 AUTO_UPDATE=${AUTO_UPDATE:-1}          # 1 = timer pulls every 15 min
+SEC_USER_AGENT=${SEC_USER_AGENT:?set SEC_USER_AGENT, e.g. "StockDashboard/1.0 you@example.com"}
 HERE=$(cd "$(dirname "$0")" && pwd)
 COMPOSE=${COMPOSE:-$HERE/../../compose.yml}
 UPDATE=${UPDATE:-$HERE/../update.sh}
@@ -67,7 +68,7 @@ pct exec "$CTID" -- bash -euo pipefail -c '
 # --- 4. App files --------------------------------------------------------
 pct push "$CTID" "$COMPOSE" /opt/stock-app/compose.yml
 pct push "$CTID" "$UPDATE"  /opt/stock-app/update.sh --perms 0755
-printf 'STOCK_APP_IMAGE=%s\nSTOCK_APP_TAG=%s\n' "$IMAGE" "$TAG" > /tmp/stock-app.env
+printf 'STOCK_APP_IMAGE=%s\nSTOCK_APP_TAG=%s\nSEC_USER_AGENT="%s"\n' "$IMAGE" "$TAG" "$SEC_USER_AGENT" > /tmp/stock-app.env
 pct push "$CTID" /tmp/stock-app.env /opt/stock-app/.env --perms 0600
 rm -f /tmp/stock-app.env
 

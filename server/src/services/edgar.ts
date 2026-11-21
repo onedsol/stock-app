@@ -5,8 +5,15 @@ import type { SecData, HistoryPoint, InsiderFiling } from '../types.js';
 const cacheShort = new NodeCache({ stdTTL: 3600 });   // 1 h for submissions
 const cacheLong  = new NodeCache({ stdTTL: 86400 });  // 24 h for facts (large payload)
 
+// SEC EDGAR requires a User-Agent with contact info, e.g. "StockDashboard/1.0 you@example.com".
+// https://www.sec.gov/os/accessing-edgar-data
+const SEC_USER_AGENT = process.env.SEC_USER_AGENT ?? 'StockDashboard/1.0';
+if (!process.env.SEC_USER_AGENT) {
+  console.warn('[edgar] SEC_USER_AGENT is not set; SEC may reject requests without contact info.');
+}
+
 const SEC_HEADERS = {
-  'User-Agent': 'StockDashboard/1.0',
+  'User-Agent': SEC_USER_AGENT,
   'Accept-Encoding': 'gzip, deflate',
 };
 
