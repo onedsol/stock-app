@@ -19,7 +19,7 @@ GW=${GW:-}                             # required if IP is static
 CORES=${CORES:-2}
 MEMORY=${MEMORY:-1024}
 DISK=${DISK:-8}
-IMAGE=${IMAGE:-ghcr.io/OWNER/stock-app}
+IMAGE=${IMAGE:-ghcr.io/onedsol/stock-app}
 TAG=${TAG:-latest}
 AUTO_UPDATE=${AUTO_UPDATE:-1}          # 1 = timer pulls every 15 min
 SEC_USER_AGENT=${SEC_USER_AGENT:?set SEC_USER_AGENT, e.g. "StockDashboard/1.0 you@example.com"}

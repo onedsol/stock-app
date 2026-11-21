@@ -2,7 +2,7 @@ name: Build & publish image
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     tags: ['v*']
   workflow_dispatch:
 
@@ -24,7 +24,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # main  -> :latest + :sha-abc1234
+      # master -> :latest + :sha-abc1234
       # v1.2.3 -> :1.2.3 + :1.2 + :sha-abc1234
       - id: meta
         uses: docker/metadata-action@v5
